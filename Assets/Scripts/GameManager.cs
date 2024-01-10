@@ -33,10 +33,11 @@ public class GameManager : MonoBehaviour
         Instantiate(map, new Vector3(0, 0, 0), Quaternion.identity);
     }
 
-    
+
     public void GameSuccess()
     {
-        PlayerPrefs.SetInt("levelActive", level + 1);
+        if (PlayerPrefs.GetInt("levelActive") < level + 1)
+            PlayerPrefs.SetInt("levelActive", level + 1);
         m_eventSuccess.Invoke();
     }
 

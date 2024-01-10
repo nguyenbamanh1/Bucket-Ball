@@ -64,11 +64,7 @@ public class SliceChooseView : MonoBehaviour
         }
         else
         {
-            for (int i = 0; i < groupLevels.Length; i++)
-            {
-                groupLevels[i].transform.SetParent(this.transform, false);
-                
-            }
+            refreshLevel();
         }
 
         vecTarget = rectTransform.anchoredPosition;
@@ -79,6 +75,33 @@ public class SliceChooseView : MonoBehaviour
             btnLeft.interactable = false;
     }
 
+    public void refreshLevel()
+    {
+        int levelActive = PlayerPrefs.GetInt("levelActive", 1);
+        for (int i = 0; i < groupLevels.Length; i++)
+        {
+            groupLevels[i].transform.SetParent(this.transform, false);
+            int count = Mathf.Min(numLevel1View, mapDataList.mapDatas.Count - numLevel1View * i);
+
+            for (int j = 0; j < count; j++)
+            {
+                var g = groupLevels[i].transform.GetChild(j);
+                int level = (j + 1 + numLevel1View * i);
+
+                g.GetComponentInChildren<TMP_Text>().text = level.ToString();
+
+                if (level <= levelActive)
+                {
+                    g.GetComponent<Image>().sprite = LevelActive;
+                }
+                else
+                {
+                    g.GetComponentInChildren<Button>().interactable = true;
+                    g.GetComponent<Image>().sprite = LevelLock;
+                }
+            }
+        }
+    }
 
     public void play(int levelSelect)
     {
