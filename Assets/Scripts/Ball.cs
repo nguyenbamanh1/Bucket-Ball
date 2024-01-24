@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class Ball : MonoBehaviour
 {
@@ -38,30 +39,52 @@ public class Ball : MonoBehaviour
         {
             var g = Instantiate(dotPrefabs, dotParent);
             g.transform.localPosition = new Vector3(0, 0, 0);
-            g.transform.localScale *= (1 -  i / numDotLine);
+            g.transform.localScale *= (1 - i / numDotLine);
             dots.Add(g);
         }
 
     }
 
+    private void OnGUI()
+    {
+
+    }
+
     private void Update()
     {
-        if(Time.timeScale > 0)
+        if (Time.timeScale > 0)
         {
-            if (Input.GetMouseButtonDown(0))
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began && !EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId))
             {
                 _isDrag = true;
-                OnStartDrag();
+                OnStartDrag(Input.GetTouch(0).position);
             }
-            if (Input.GetMouseButtonUp(0))
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Ended && !EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId)
+                && _isDrag)
             {
                 _isDrag = false;
-                OnEndDrag();
+                OnEndDrag(Input.GetTouch(0).position);
+            }
+
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved && _isDrag)
+                OnDrag(Input.GetTouch(0).position);
+#else
+
+            if (Input.GetMouseButtonDown(0) && !EventSystem.current.IsPointerOverGameObject())
+            {
+                _isDrag = true;
+                OnStartDrag(Input.mousePosition);
+            }
+            if (Input.GetMouseButtonUp(0) && !EventSystem.current.IsPointerOverGameObject())
+            {
+                _isDrag = false;
+                OnEndDrag(Input.mousePosition);
             }
 
             if (Input.GetMouseButton(0))
-                OnDrag();
-
+                OnDrag(Input.mousePosition);
+#endif
         }
     }
 
@@ -72,11 +95,11 @@ public class Ball : MonoBehaviour
             countResetPos = 1f;
             return;
         }
-        else if(countResetPos > 0f)
+        else if (countResetPos > 0f)
         {
             countResetPos -= Time.fixedDeltaTime;
         }
-        if(isOutCamera() && countResetPos <= 0)
+        if (isOutCamera() && countResetPos <= 0)
         {
             rb.velocity = Vector2.zero;
             rb.angularVelocity = 0f;
@@ -85,11 +108,9 @@ public class Ball : MonoBehaviour
         }
     }
 
-    public void OnDrag()
+    public void OnDrag(Vector3 position)
     {
-        Debug.Log("Dragggg");
-
-        Vector2 currentPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 currentPos = Camera.main.ScreenToWorldPoint(position);
         float distance = Vector2.Distance(currentPos, startDragPos);
         var force = (startDragPos - currentPos).normalized * distance * Power;
         float space = dotSpace;
@@ -104,30 +125,31 @@ public class Ball : MonoBehaviour
 
     }
 
-    public void OnEndDrag()
+    public void OnEndDrag(Vector3 position)
     {
-        Debug.Log("End Drag");
+        Vector2 currentPos = Camera.main.ScreenToWorldPoint(position);
+        float distance = Vector2.Distance(currentPos, startDragPos);
+        if (distance < .2f)
+            return;
         rb.angularVelocity = 0f;
         rb.velocity = Vector2.zero;
         rb.isKinematic = false;
         //rb.angularVelocity = 0f;
-        rb.AddForce(CaculatoVelocity(), ForceMode2D.Impulse);
+        rb.AddForce(CaculatoVelocity(position), ForceMode2D.Impulse);
         //rb.velocity = CaculatoVelocity();
         dotParent.gameObject.SetActive(false);
     }
 
-    public void OnStartDrag()
+    public void OnStartDrag(Vector3 position)
     {
-        Debug.Log("Start Drag");
-
         rb.isKinematic = true;
         dotParent.gameObject.SetActive(true);
-        startDragPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        startDragPos = Camera.main.ScreenToWorldPoint(position);
     }
 
-    private Vector2 CaculatoVelocity()
+    private Vector2 CaculatoVelocity(Vector3 position)
     {
-        Vector2 currentPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector2 currentPos = Camera.main.ScreenToWorldPoint(position);
         float distance = Vector2.Distance(currentPos, startDragPos);
         return (startDragPos - currentPos).normalized * distance * Power;
     }

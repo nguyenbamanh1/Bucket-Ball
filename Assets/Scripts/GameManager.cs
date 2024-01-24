@@ -20,6 +20,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        Application.targetFrameRate = 60;
         instance = this;
         Time.timeScale = 1f;
         level = PlayerPrefs.GetInt("level", 1);

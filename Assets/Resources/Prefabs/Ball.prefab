@@ -279,7 +279,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec0e7de7f53a3254d9faf72c9fded781, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numDotLine: 30
+  numDotLine: 25
   Power: 15
   dotSpace: 0.05
   dotParent: {fileID: 6214900685033067943}
